@@ -1,2 +1,2 @@
 def main(event,context):
-    print("Hey first deployment")
+    print("Hey New deployment")
