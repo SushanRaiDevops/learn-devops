@@ -1,0 +1,58 @@
+pipeline{
+    agent any
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('ACCESS_KEY')
+        AWS_SECRET_ACCESS_KEY = credentials('SECRET_ACCESS_KEY')
+        AWS_DEFAULT_REGION = 'us-east-1'
+    }
+    stages {
+        stage('checkout'){
+            steps{
+                script{
+                     checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/SushanRaiDevops/learn-devops.git']])
+                }
+            }
+        }
+        stage('Initialize terraform'){
+            steps{
+                script{
+                     dir('lambda/infra'){
+                         sh 'terraform init'
+                     }
+                     
+                }
+            }
+        }
+        stage('Format and Validate terraform'){
+            steps{
+                script{
+                     dir('lambda/infra'){
+                         sh 'terraform fmt .'
+                         sh 'terraform validate'
+                     }
+                     
+                }
+            }
+        }
+        stage('Plan terraform'){
+            steps{
+                script{
+                     dir('lambda/infra'){
+                         sh 'terraform plan'
+                     }
+                input(message: "Deploy the infra?", ok: "Proceed")                    
+                }
+            }
+        }
+        stage('Deploy terraform'){
+            steps{
+                script{
+                     dir('lambda/infra'){
+                         sh 'terraform $action --auto-approve'
+                     }
+                     
+                }
+            }
+        }
+    }
+}
